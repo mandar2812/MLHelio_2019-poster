@@ -48,7 +48,7 @@
 %\usepackage{svg}
 %\usepackage{wrapfig}
 %\usepackage[a0paper,pass]{geometry}
-\usepackage{graphicx,array}
+\usepackage{array}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % TIKZ packages and common definitions
@@ -78,6 +78,17 @@
   \includegraphics[width=#3\hsize,angle=#1]{#2}
   \nobreak\medskip
 \end{center}}
+
+
+\newcommand{\mydrawing}[3]{
+  \vspace{0.5cm}
+  \begin{center}
+    \resizebox*{#2\hsize}{!}{\input{#1}}
+    \label{#3}
+  \end{center}
+  \vspace{0.5cm}
+  \stepcounter{figure}
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -120,6 +131,7 @@
   %\vspace{1cm}
   \stepcounter{figure}
 }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -251,13 +263,13 @@
     % Title text
     \node[inner sep=0,text width=0.8\textwidth,text centered,font=\Huge] (Title) at (-0.3,0) 
     {
-        {\sffamily\veryHuge \textbf{Causal Dynamic Time Lag : What? and When?}}\\
+        {\sffamily\veryHuge \textbf{Predicting Time Lagged Effects of Solar Activity}}\\
         {\sffamily\Huge \underline{Mandar Chandorkar}$^{1,2}$, Cyril Furthlener$^2$, 
         Bala Poduval$^3$, 
         Enrico Camporeale$^1$, 
         Michele Sebag$^2$}\\
         \vspace{-0.2\baselineskip}
-        {\sffamily\LARGE 1 Multiscale Dynamics, CWI, Amsterdam, 
+        {\sffamily\large 1 Multiscale Dynamics, CWI, Amsterdam, 
         2 TAU, INRIA Paris-Saclay 
         3 UNH, New Hampshire}\\
         \vspace{-0.3\baselineskip}
@@ -310,21 +322,26 @@
 
 \mysection{Sun-Earth System}
 
-\myfig{magnetosphere}{0.65}
+\myfig{parker-spiral}{0.65}
 
-The Sun ejects charged energetic particles, known as the \emph{solar wind}, into the surrounding space. Depending on the nature of activity on the Sun, its effects are observed near the Earth after some time delay, which is variable and uncertain.
+The Sun ejects charged energetic particles, known as the \emph{solar wind}, into the surrounding space. 
+Depending on the nature of activity on the Sun, its effects are observed near the Earth after some time delay, 
+which is variable and uncertain.
 
 \vspace{0.5\baselineskip}
-\mysection{Causal Time Lag \& Propagation Time}
+\mysection{Dynamic Time-Lag Regression}
 \myfig{GrangerCausalityIllustration}{0.65}
 
-Learning the the time delay between causes and effects, from data, is an important and challenging problem. We call this problem \emph{Causal Dynamic Time Lag} and formulate it as follows.
+Learning the the time delay between causes and effects, from data, is an important and challenging problem. We call this problem 
+\emph{Dynamic Time Lag Regression}(DTLR) and formulate it as follows.
 %\vfill
 %\columnbreak
 
 \begin{enumerate}
 \item \textbf{Inputs}: Two time series, the causes $x(t)$ and the observed effects $y(t)$
-\item \textbf{Outputs}: A function $f: \mathcal{X}  \rightarrow \mathbb{R}$ which maps each input pattern $x(t_1)$ to an output $y(t_2)$, and $g:\mathcal{X}  \rightarrow \mathbb{R}^{+}$ which maps the time delay between the input and output patterns $t_2 = t_1 + g(x(t_1))$.
+\item \textbf{Outputs}: A function $f: \mathcal{X}  \rightarrow \mathbb{R}$ which maps each input pattern 
+  $x(t_1)$ to an output $y(t_2)$, and $g:\mathcal{X}  \rightarrow \mathbb{R}^{+}$ which maps the time delay 
+  between the input and output patterns $t_2 = t_1 + g(x(t_1))$.
 \end{enumerate}
 
 \begin{align}
@@ -352,7 +369,7 @@ Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$
 \vspace{0.4\baselineskip}
 
 \textbf{Architecture}: The proposed model architecture takes the form of a neural network model as seen below.
-\myfig{network}{0.65}
+\mydrawing{archi.tex}{0.6}{fig:NN}
 
 \textbf{Model Training}: In order to build time lag based models, we must devise an objective/loss function which favours.
 
@@ -362,17 +379,6 @@ Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$
 \end{enumerate}
 
 
-The neural network parameters are updated using gradient based minimization of equation \ref{eq:loss}.
-
-
-\begin{equation}\label{eq:loss}
-\begin{aligned}
-\mathcal{L}(y^{(1:M)}, \hat{y}^{(1:M)}, \hat{p}^{(1:M)}) = & \lambda_1 \frac{1}{2M} \sum_{i,m}{(y^{(m)}_{i} - \hat{y}^{(m)}_{i})^2 (1 + \hat{p}^{(m)}_i)} \\ 
-+ &\lambda_2 \frac{1}{M} \sum_{i,m}{\hat{p}^{m}_{i} log \left( \frac{\hat{p}^{m}_{i}}{\widetilde{p}_{i}}\right )}
-\end{aligned}
-\end{equation}
-
-The quantity $\widetilde{p}_i, i \in {1, \cdots, h}$ represents some \emph{apriori} knowledge of the propagation time distribution. In the experiments run here, we choose $\widetilde{p}_i = 1/h$.
 
 
 
@@ -383,73 +389,41 @@ The quantity $\widetilde{p}_i, i \in {1, \cdots, h}$ represents some \emph{aprio
 
 \textbf{Data Generation}: Time series $x(t) \in \mathbb{R}^8$, of size $4000$ (one copy for training and another for test), using \emph{Stochastic Langevin Dynamics} as shown in equation \ref{eq:data}.
 
-\begin{align}
- x(t+1) &= (1 - \tau) x(t) + \mathcal{N}(0, \sigma^2) \label{eq:data}\\
- y(t+\Delta(t)) &= \alpha ||x(t)||^2 \label{eq:outputs}
-\end{align}
 
-\begin{enumerate}
-\item \textbf{Problem I} Constant Velocity $\alpha ||x(t)||^2 + c$; Fixed Distance $d$: 
-\newline $\Delta(t) = d/(\alpha ||x(t)||^2 + c),\ \alpha = \frac{100}{8},\ d = 1000,\ c = 40$
-
-\item \textbf{Problem II} Constant Acceleration $a$; Fixed Distance $d$: 
-\newline $\Delta(t) = (\sqrt{\alpha^2||x(t)||^4 + 2ad} - \alpha||x(t)||^2)/a,\ \alpha = \frac{50}{8},\ a = 5,\ d = 1000$
-
-\end{enumerate}
-
-
-\myfig{exp2_scatter_v_tl}{0.4}
+\myfig{test_scatter_v}{0.5}
 
 \mycaption{\textbf{Problem I}: Output vs Propagation time relationship}
 
 
-\myfig{exp3_scatter_v_tl}{0.4}
-
-\mycaption{\textbf{Problem II}: Output vs Propagation time relationship}
-
 \begin{center}
-\begin{tabular}{p{0.2\linewidth}p{0.2\linewidth}p{0.2\linewidth}p{0.2\linewidth}}
-\hline
-\noalign{\smallskip}
-\multicolumn{4}{c}{Predictive Performance: Time Lag} \\
-\hline
-Problem  &  M.A.E  &  Correlation & Data Range \\
-\noalign{\smallskip}
-\hline
-\noalign{\smallskip}
-I & $0.763$ & $0.899$ & $[1, 16]$\\
-II & $1.492$ & $0.934$ & $[1, 16]$ \\
-\noalign{\smallskip}
-\hline
-\end{tabular}
-\end{center}
-
-\begin{center}
-\begin{tabular}{p{0.2\linewidth}p{0.2\linewidth}p{0.2\linewidth}p{0.2\linewidth}}
-\hline
-\noalign{\smallskip}
-\multicolumn{4}{c}{Predictive Performance: Output} \\
-\hline
-Problem  &  M.A.E  &  Correlation & Data Range\\
-\noalign{\smallskip}
-\hline
-\noalign{\smallskip}
-I & $20.186$ & $0.983$ & $[60, 575]$ \\
-II & $16.204$ & $0.980$ & $[100, 700]$  \\
-\noalign{\smallskip}
-\hline
-\end{tabular}
+  \label{tab:results_reiss}
+  \centering
+  \begin{tabular}{ l l l }
+  \hline
+  Model &  M.A.E & R.M.S.E \\
+  \hline
+  DTLR & $54.41$ & $66.22$ \\
+  Fixed Lag Baseline & $67.33$ & $80.39$ \\
+  WS & $74.09$ & $85.27$ \\
+  DCHB & $83.83$ & $103.43$ \\
+  WSA & $68.54$ & $82.62$ \\
+  Ensemble Median (WS)   & $71.52$ & $83.36$ \\
+  Ensemble Median (DCHB) & $78.27$ & $100.04$ \\
+  Ensemble Median (WSA)  & $62.24$ & $74.86$ \\
+  Persistence (4 days)   & $130.48$ & $161.99$ \\
+  Persistence (27 days)  & $66.54$ & $78.86$ \\
+  \hline
+  \end{tabular}
+  \mycaption{
+    Performance Comparison on CR $2077$: DTLR  \ , 
+    Fixed Lag Base Line vs Reiss et. al (2019)
+  }
 \end{center}
 
 
 %\vspace{\baselineskip}
-\mysection{Future Work}
-\begin{enumerate}
-    \item Application of our proposed method to the problem of predicting solar wind propagation time using solar images. 
-    \item Manuscript (under review) AISTATS 2019\\
-\end{enumerate}
-    %\vspace{.5\baselineskip}
-    %Ref: Chandorkar, Camporeale, Wing \emph{Gaussian Processes Autoregressive Models for Forecasting the Disturbance Storm Time Index}
+%\vspace{.5\baselineskip}
+%Ref: Chandorkar, Camporeale, Wing \emph{Gaussian Processes Autoregressive Models for Forecasting the Disturbance Storm Time Index}
 
 \end{multicols}
 
