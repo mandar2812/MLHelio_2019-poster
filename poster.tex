@@ -132,6 +132,16 @@
   \stepcounter{figure}
 }
 
+\def\DD{\displaystyle}
+%\DeclareMathOperator*{\argmin}{argmin}
+%\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\Var}{Var}
+\DeclareMathOperator*{\Cov}{Cov}
+\newcommand{\p}{{\bf q}}
+\newcommand{\hp}{\hat{\bf p}}
+\def\XX{{DTLR}}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -333,7 +343,7 @@ which is variable and uncertain.
 \myfig{GrangerCausalityIllustration}{0.65}
 
 Learning the the time delay between causes and effects, from data, is an important and challenging problem. We call this problem 
-\emph{Dynamic Time Lag Regression}(DTLR) and formulate it as follows.
+\emph{Dynamic Time Lag Regression} (\XX) and formulate it as follows.
 %\vfill
 %\columnbreak
 
@@ -351,15 +361,15 @@ y(t + \Delta(t)) & = f[x(t)]\label{eq:pb1}\\
 
 \mysection{Proposed Solution}
 
-Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$. 
+Define for every time step $t$, a time window $[t+\ell, t+\ell+h)$. 
 \vspace{0.4\baselineskip}
 
 \textbf{Inputs}: Time series $x(t) \in \mathbb{R}^{n}$ \vspace{0.5\baselineskip}
 
 \textbf{Model Outputs}: 
 \begin{enumerate}
-\item Targets $[\hat{y}(t+\ell), \cdots, \hat{y}(t+\ell+h-1)]$
-\item Time Lag Probabilities $[\hat{p}(t+\ell), \cdots, \hat{p}(t+\ell+h-1)], \ \sum^{h-1}_{i = 0}{\hat{p}_{i}} = 1$
+\item Targets $[\hat{y}(t+\ell), \dots, \hat{y}(t+\ell+h-1)]$
+\item Time Lag Probabilities $[\hat{p}(t+\ell), \dots, \hat{p}(t+\ell+h-1)], \ \sum^{h-1}_{i = 0}{\hat{p}_{i}} = 1$
 \end{enumerate}
 
 \vspace{0.4\baselineskip}
@@ -374,21 +384,40 @@ Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$
 \textbf{Model Training}: In order to build time lag based models, we must devise an objective/loss function which favours.
 
 \begin{enumerate}
-    \item Accurate predictions for time window $y(t+\ell), \cdots, y(t+\ell+h-1)$
-    \item Learning the time lag structure.
+    \item Accurate predictions for time window: $\hat{y}(t+\ell), \dots, \hat{y}(t+\ell+h-1)$
+    \item Learning the time lag structure by penalising $\hat{p}(t+\ell), \dots, \hat{p}(t+\ell+h-1)$.
 \end{enumerate}
 
 
-
-
+%
+\begin{equation}\label{eq:LL}
+  {\cal L}\bigl[ {\bf x, y};\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}] = 
+  -\vert T\vert\log(\sigma)-\frac{1}{n_m}\sum_m\Bigl[
+    \sum_{i \in T}\frac{1}{2\sigma^2}\bigl(y_{m+i}-\hat y_i(x_m)\bigr)^2 - 
+    \log\bigl(Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha})\bigr)\Bigr],
+\end{equation}
+%
+with $n_m$ the number of data points and partition term $Z_m$ given as:
+\[
+  Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}) = \sum_{i \in T}\hat p_i(x_m)\exp\Bigl(
+    - \frac{1}{2\sigma^2}\sum_{j\in T}\alpha_{ji}\bigl(y_{m+j}-\hat y_j(x_m)\bigr)^2 
+    + \frac{1}{2}\sum_{j\in T}\log(1+\alpha_{ji})\Bigr).
+\]
 
 
 \vspace{0.5\baselineskip}
 
 \mysection{Experiments}
 
-\textbf{Data Generation}: Time series $x(t) \in \mathbb{R}^8$, of size $4000$ (one copy for training and another for test), using \emph{Stochastic Langevin Dynamics} as shown in equation \ref{eq:data}.
+\textbf{Input Data} 
 
+\begin{itemize}
+  \item Magnetic flux-tube expansion $\log \mathbf{f}_S$ and source surface field 
+  $\mathbf{B}_{ss}$. Both computed from GONG synoptic maps using the 
+  \emph{Current-Sheet Source Surface} (CSSS) \citep{csss} model.
+  \item $\Phi$, the Carrington longitude of the computed of each time-stamped $\mathbf{f}_S$.
+  \item Sun spot number $SSN$ and $F_{10.7}$ indices from OMNI.
+\end{itemize} 
 
 \myfig{test_scatter_v}{0.5}
 
@@ -402,7 +431,7 @@ Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$
   \hline
   Model &  M.A.E & R.M.S.E \\
   \hline
-  DTLR & $54.41$ & $66.22$ \\
+  \XX & $54.41$ & $66.22$ \\
   Fixed Lag Baseline & $67.33$ & $80.39$ \\
   WS & $74.09$ & $85.27$ \\
   DCHB & $83.83$ & $103.43$ \\
@@ -415,11 +444,14 @@ Define for every time step $t$, a \emph{causal time window} $[t+\ell, t+\ell+h)$
   \hline
   \end{tabular}
   \mycaption{
-    Performance Comparison on CR $2077$: DTLR  \ , 
-    Fixed Lag Base Line vs Reiss et. al (2019)
+    Performance Comparison on CR $2077$: \XX \ , 
+    Fixed Lag Base Line vs \citet{Reiss_2019}
   }
 \end{center}
 
+
+\bibliographystyle{rusnat}
+\bibliography{sample}
 
 %\vspace{\baselineskip}
 %\vspace{.5\baselineskip}
