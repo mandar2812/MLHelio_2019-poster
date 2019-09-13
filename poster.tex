@@ -404,7 +404,7 @@ After trying several candidates, we settled on:
 %
 with $n_m$ being the mini-batch size and $Z_m$ is given as:
 \[
-  Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}) = \sqrt{\log(1+\alpha)}\sum_{i \in T}\hat p_i(x_m)\exp\Bigl(
+  Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}) = \sqrt{(1+\alpha)}\sum_{i \in T}\hat p_i(x_m)\exp\Bigl(
     - \frac{1}{2\sigma^2}\alpha\bigl(y_{m+i}-\hat y_i(x_m)\bigr)^2\Bigr).
 \]
 %
