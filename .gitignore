@@ -24,3 +24,4 @@ thesis.synctex*
 *.dict
 .vscode
 thesis.pdf.zip
+!archi.pdf
