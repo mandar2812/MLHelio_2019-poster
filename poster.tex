@@ -49,6 +49,7 @@
 %\usepackage{wrapfig}
 %\usepackage[a0paper,pass]{geometry}
 \usepackage{array}
+\usepackage[inline]{enumitem}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % TIKZ packages and common definitions
@@ -330,14 +331,18 @@
 \begin{multicols}{2}
 
 
-\mysection{Sun-Earth System}
+\mysection{Origin of the Solar Wind}
 
 \myfig{parker-spiral}{0.65}
+\vspace{0.5\baselineskip}
 
-The Sun ejects charged energetic particles, known as the \emph{solar wind}, into the surrounding space. 
-Depending on the nature of activity on the Sun, its effects are observed near the Earth after some time delay, 
-which is variable and uncertain.
+Supersonic expansion of the solar magnetic field leads to the formation of the 
+\emph{solar wind}. The charged particles follow the \emph{Parker spiral} into the 
+inter-planetary medium. 
 
+Forecasting solar wind speed at $1$ AU from solar observations is a challenging task 
+because the propagation time of the solar wind is uncertain and dynamic.
+\vspace{\baselineskip}
 \vspace{0.5\baselineskip}
 \mysection{Dynamic Time-Lag Regression}
 \myfig{GrangerCausalityIllustration}{0.65}
@@ -349,16 +354,17 @@ Learning the the time delay between causes and effects, from data, is an importa
 
 \begin{enumerate}
 \item \textbf{Inputs}: Two time series, the causes $x(t)$ and the observed effects $y(t)$
-\item \textbf{Outputs}: A function $f: \mathcal{X}  \rightarrow \mathbb{R}$ which maps each input pattern 
-  $x(t_1)$ to an output $y(t_2)$, and $g:\mathcal{X}  \rightarrow \mathbb{R}^{+}$ which maps the time delay 
+\item \textbf{Outputs}: A function $f: \mathcal{X}  \rightarrow \mathbb{R}$ which maps 
+  each input pattern $x(t_1)$ to an output $y(t_2)$, and 
+  $g:\mathcal{X}  \rightarrow \mathbb{R}^{+}$ which maps the time delay 
   between the input and output patterns $t_2 = t_1 + g(x(t_1))$.
 \end{enumerate}
 
-\begin{align}
-y(t + \Delta(t)) & = f[x(t)]\label{eq:pb1}\\
-\Delta(t) & = g[x(t)]\label{eq:pb2} 
-\end{align}
-
+\begin{align*}
+y(t + \Delta(t)) & = f[x(t)\\
+\Delta(t) & = g[x(t)] 
+\end{align*}
+%\vspace{\baselineskip}
 \mysection{Proposed Solution}
 
 Define for every time step $t$, a time window $[t+\ell, t+\ell+h)$. 
@@ -368,46 +374,51 @@ Define for every time step $t$, a time window $[t+\ell, t+\ell+h)$.
 
 \textbf{Model Outputs}: 
 \begin{enumerate}
-\item Targets $[\hat{y}(t+\ell), \dots, \hat{y}(t+\ell+h-1)]$
-\item Time Lag Probabilities $[\hat{p}(t+\ell), \dots, \hat{p}(t+\ell+h-1)], \ \sum^{h-1}_{i = 0}{\hat{p}_{i}} = 1$
+\item Targets ${\bf\hat{y}} = [\hat{y}(t+\ell), \dots, \hat{y}(t+\ell+h-1)]$
+\item Time Lag Probabilities ${\bf\hat{p}} = [\hat{p}(t+\ell), \dots, \hat{p}(t+\ell+h-1)], \ \sum^{h-1}_{i = 0}{\hat{p}_{i}} = 1$
 \end{enumerate}
 
 \vspace{0.4\baselineskip}
 
-\textbf{Predictions}: For an input $x(t)$, predict the target $\hat{y}(t + \ell + i^{*})$ corresponding to the most probable propagation time $i^{*} = \argmin_{i}{\hat{p}_i(x(t))}$
+\textbf{Predictions}: For an input $x(t)$, predict the target 
+$\hat{y}(t + \ell + i^{*})$ corresponding to the most probable 
+propagation time $i^{*} = \argmin_{i}{\hat{p}_i(x(t))}$
 
 \vspace{0.4\baselineskip}
 
-\textbf{Architecture}: The proposed model architecture takes the form of a neural network model as seen below.
-\mydrawing{archi.tex}{0.6}{fig:NN}
+\textbf{Architecture}: The proposed model architecture takes the form of a neural network 
+model as seen below.\mydrawing{archi.tex}{0.6}{fig:NN}
 
-\textbf{Model Training}: In order to build time lag based models, we must devise an objective/loss function which favours.
-
-\begin{enumerate}
-    \item Accurate predictions for time window: $\hat{y}(t+\ell), \dots, \hat{y}(t+\ell+h-1)$
-    \item Learning the time lag structure by penalising $\hat{p}(t+\ell), \dots, \hat{p}(t+\ell+h-1)$.
-\end{enumerate}
-
-
+\textbf{Model Training}: We need an objective/loss function which:
+\begin{enumerate*}
+    \item rewards accurate predictions for time window: $\bf \hat{y}$ and 
+    \item penalises $\bf \hat{p}$ in a principled manner.
+\end{enumerate*}
 %
-\begin{equation}\label{eq:LL}
-  {\cal L}\bigl[ {\bf x, y};\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}] = 
-  -\vert T\vert\log(\sigma)-\frac{1}{n_m}\sum_m\Bigl[
+After trying several candidates, we settled on: 
+\begin{align*}\label{eq:LL}
+    {\cal L}\bigl[ {\bf x, y};\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}] &= \\
+    &-\vert T\vert\log(\sigma) \\
+    &-\frac{1}{n_m}\sum_m\Bigl[
     \sum_{i \in T}\frac{1}{2\sigma^2}\bigl(y_{m+i}-\hat y_i(x_m)\bigr)^2 - 
     \log\bigl(Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha})\bigr)\Bigr],
-\end{equation}
+\end{align*}
 %
-with $n_m$ the number of data points and partition term $Z_m$ given as:
+with $n_m$ being the mini-batch size and $Z_m$ is given as:
 \[
-  Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}) = \sum_{i \in T}\hat p_i(x_m)\exp\Bigl(
-    - \frac{1}{2\sigma^2}\sum_{j\in T}\alpha_{ji}\bigl(y_{m+j}-\hat y_j(x_m)\bigr)^2 
-    + \frac{1}{2}\sum_{j\in T}\log(1+\alpha_{ji})\Bigr).
+  Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}) = \sqrt{\log(1+\alpha)}\sum_{i \in T}\hat p_i(x_m)\exp\Bigl(
+    - \frac{1}{2\sigma^2}\alpha\bigl(y_{m+i}-\hat y_i(x_m)\bigr)^2\Bigr).
 \]
+%
 
+After initialisation, the model parameters are updated in an alternating fashion.
+\begin{enumerate*}
+  \item Update the neural network parameters; keep $\alpha$ and $\sigma$ fixed.
+  \item Update $\alpha$ and $\sigma$; keep the network parameters fixed.
+\end{enumerate*}
 
 \vspace{0.5\baselineskip}
-
-\mysection{Experiments}
+\mysection{Solar Wind Forecasting}
 
 \textbf{Input Data} 
 
@@ -415,13 +426,14 @@ with $n_m$ the number of data points and partition term $Z_m$ given as:
   \item Magnetic flux-tube expansion $\log \mathbf{f}_S$ and source surface field 
   $\mathbf{B}_{ss}$. Both computed from GONG synoptic maps using the 
   \emph{Current-Sheet Source Surface} (CSSS) \citep{csss} model.
-  \item $\Phi$, the Carrington longitude of the computed of each time-stamped $\mathbf{f}_S$.
+  \item $\Phi$, the Carrington longitude of the computed of each time-stamped 
+  $\mathbf{f}_S$.
   \item Sun spot number $SSN$ and $F_{10.7}$ indices from OMNI.
+  \item The solar wind speed $27$ days before the data time-stamp, $v_{27}$
 \end{itemize} 
 
 \myfig{test_scatter_v}{0.5}
-
-\mycaption{\textbf{Problem I}: Output vs Propagation time relationship}
+\mycaption{Results of $9$-fold cross validation.}
 
 
 \begin{center}
@@ -443,7 +455,7 @@ with $n_m$ the number of data points and partition term $Z_m$ given as:
   Persistence (27 days)  & $66.54$ & $78.86$ \\
   \hline
   \end{tabular}
-  \mycaption{
+  \mytablecaption{
     Performance Comparison on CR $2077$: \XX \ , 
     Fixed Lag Base Line vs \citet{Reiss_2019}
   }
