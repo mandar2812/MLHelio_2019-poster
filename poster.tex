@@ -431,7 +431,16 @@ After initialisation, the model parameters are updated in an alternating fashion
   \item Sun spot number $SSN$ and $F_{10.7}$ indices from OMNI.
   \item The solar wind speed $27$ days before the data time-stamp, $v_{27}$
 \end{itemize} 
+\vspace{0.1\baselineskip}
+\textbf{Validation}: $9$-fold cross-validation on Carrington rotations: 2077, 2090, 2104, 2117, 
+2130, 2143, 2157, 2171, and 2184. 
+\vspace{0.1\baselineskip}
 
+\textbf{Benchmarks}: On Carrington rotation 2077, model benchmarks from \citet{Reiss_2019} were used. 
+We also trained a fixed time-lag baseline model, which forecasts solar wind speed with a time horizon 
+of $t + h/2$.
+\vspace{0.2\baselineskip}
+\mysection{Results}
 \myfig{test_scatter_v}{0.5}
 \mycaption{Results of $9$-fold cross validation.}
 
