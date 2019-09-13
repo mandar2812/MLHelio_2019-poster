@@ -277,12 +277,12 @@
         {\sffamily\veryHuge \textbf{Predicting Time Lagged Effects of Solar Activity}}\\
         {\sffamily\Huge \underline{Mandar Chandorkar}$^{1,2}$, Cyril Furthlener$^2$, 
         Bala Poduval$^3$, 
-        Enrico Camporeale$^1$, 
+        Enrico Camporeale$^{1,4,5}$, 
         Michele Sebag$^2$}\\
         \vspace{-0.2\baselineskip}
-        {\sffamily\large 1 Multiscale Dynamics, CWI, Amsterdam, 
-        2 TAU, INRIA Paris-Saclay 
-        3 UNH, New Hampshire}\\
+        {
+          \sffamily\large 1 CWI, Amsterdam, 2 TAU, INRIA Paris-Saclay 3 UNH, New Hampshire 4 CIRES, CU, Boulder 5 NOAA, SWPC
+        }\\
         \vspace{-0.3\baselineskip}
         {\sffamily\LARGE www.mlspaceweather.org}
     };
@@ -333,7 +333,7 @@
 
 \mysection{Origin of the Solar Wind}
 
-\myfig{parker-spiral}{0.65}
+\myfig{parker-spiral}{0.6}
 \vspace{0.5\baselineskip}
 
 Supersonic expansion of the solar magnetic field leads to the formation of the 
@@ -341,11 +341,10 @@ Supersonic expansion of the solar magnetic field leads to the formation of the
 inter-planetary medium. 
 
 Forecasting solar wind speed at $1$ AU from solar observations is a challenging task 
-because the propagation time of the solar wind is uncertain and dynamic.
-\vspace{\baselineskip}
-\vspace{0.5\baselineskip}
+because the propagation time of the solar wind is uncertain (2 to 5 days) and dynamic.
+\vspace{0.2\baselineskip}
 \mysection{Dynamic Time-Lag Regression}
-\myfig{GrangerCausalityIllustration}{0.65}
+\myfig{GrangerCausalityIllustration}{0.5}
 
 Learning the the time delay between causes and effects, from data, is an important and challenging problem. We call this problem 
 \emph{Dynamic Time Lag Regression} (\XX) and formulate it as follows.
@@ -397,9 +396,8 @@ model as seen below.\mydrawing{archi.tex}{0.6}{fig:NN}
 %
 After trying several candidates, we settled on: 
 \begin{align*}\label{eq:LL}
-    {\cal L}\bigl[ {\bf x, y};\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}] &= \\
-    &-\vert T\vert\log(\sigma) \\
-    &-\frac{1}{n_m}\sum_m\Bigl[
+    {\cal L}\bigl[ {\bf x, y};\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha}] &= -\vert T\vert\log(\sigma)
+    -\frac{1}{n_m}\sum_m\Bigl[
     \sum_{i \in T}\frac{1}{2\sigma^2}\bigl(y_{m+i}-\hat y_i(x_m)\bigr)^2 - 
     \log\bigl(Z_m(\hat {\bf y},\hat {\bf p},\sigma,{\bf \alpha})\bigr)\Bigr],
 \end{align*}
@@ -441,9 +439,14 @@ We also trained a fixed time-lag baseline model, which forecasts solar wind spee
 of $t + h/2$.
 \vspace{0.2\baselineskip}
 \mysection{Results}
-\myfig{test_scatter_v}{0.5}
-\mycaption{Results of $9$-fold cross validation.}
+\vspace{0.2\baselineskip}
+\begin{center}
+  \includegraphics[width=0.5\hsize]{test_scatter_v}
+  \mycaption{Results of $9$-fold cross validation.}
+\end{center}
 
+
+\vspace{\baselineskip}
 
 \begin{center}
   \label{tab:results_reiss}
@@ -452,11 +455,11 @@ of $t + h/2$.
   \hline
   Model &  M.A.E & R.M.S.E \\
   \hline
-  \XX & $54.41$ & $66.22$ \\
+  \XX \ (this work) & $54.41$ & $66.22$ \\
   Fixed Lag Baseline & $67.33$ & $80.39$ \\
-  WS & $74.09$ & $85.27$ \\
-  DCHB & $83.83$ & $103.43$ \\
-  WSA & $68.54$ & $82.62$ \\
+  WS \footnote{Wang Sheeley} & $74.09$ & $85.27$ \\
+  DCHB \footnote{Distance from the Coronal Hole Boundary} & $83.83$ & $103.43$ \\
+  WSA \footnote{Wang Sheeley Arge} & $68.54$ & $82.62$ \\
   Ensemble Median (WS)   & $71.52$ & $83.36$ \\
   Ensemble Median (DCHB) & $78.27$ & $100.04$ \\
   Ensemble Median (WSA)  & $62.24$ & $74.86$ \\
